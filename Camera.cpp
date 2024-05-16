@@ -7,7 +7,7 @@ Camera::Camera(int width, int height, glm::vec3 position)
 	Position = position;
 }
 
-void Camera::updateMatrix(float FOVdeg, float nearPlane, float farPlane) {
+void Camera::updateMatrix(float nearPlane, float farPlane) {
 	//Orthographic view model
 	glm::mat4 proj = glm::ortho(0.0f, (float)width, 0.0f, (float)height, nearPlane, farPlane);
 	glm::mat4 view = glm::lookAt(Position, Position + Orientation, Up);

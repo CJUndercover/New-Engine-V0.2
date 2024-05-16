@@ -8,7 +8,7 @@ in vec3 color;
 in vec2 texCoord;
 in float u_texIndex;
 // Gets the Texture Unit from the main function
-uniform sampler2D u_Textures[2];
+uniform sampler2D u_Textures[3];
 
 void main()
 {
