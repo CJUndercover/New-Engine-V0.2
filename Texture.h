@@ -12,6 +12,7 @@ public:
 	GLuint ID;
 	const char* type;
 	GLuint unit;
+	bool collision = false;
 	Texture(const char* image, const char* texType, GLenum slot, GLenum format, GLenum pixelType);
 
 	// Assigns a texture unit to a texture

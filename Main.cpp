@@ -11,60 +11,96 @@
 #include"Camera.h"
 #include"Texture.h"
 #include"Shader.h"
-#include"VAO.h"
-#include"VBO.h"
-#include"EBO.h"
+#include"Buffer.h"
 
-struct Vertex {
-	glm::vec3 position;
-	glm::vec3 color;
-	glm::vec2 texUV;
-	float texNum;
-};
-
-static Vertex* CreateQuad(Vertex* target, float x, float y, float textureID) {
-	//Do not initialize as one like this, float size = 1.0f;
-	float size = 200.0f;
-
-	target->position = { x, y, 0.0f };
-	target->color = { 1.0f, 0.0f, 0.0f };
-	target->texUV = { 0.0f, 0.0f };
-	target->texNum = textureID;
-	target++;
-
-	target->position = { x + size, y, 0.0f };
-	target->color = { 0.0f, 1.0f, 0.0f };
-	target->texUV = { 1.0f, 0.0f };
-	target->texNum = textureID;
-	target++;
-	
-	target->position = { x + size, y + size, 0.0f };
-	target->color = { 0.0f, 0.0f, 1.0f };
-	target->texUV = { 1.0f, 1.0f };
-	target->texNum = textureID;
-	target++;
-
-	target->position = { x, y + size, 0.0f };
-	target->color = { 1.0f, 1.0f, 1.0f };
-	target->texUV = { 0.0f, 1.0f };
-	target->texNum = textureID;
-	target++;
-
-	return target;
-}
-
-const unsigned int screenWidth = 1000;
+const unsigned int screenWidth = 800;
 const unsigned int screenHeight = 800;
 const size_t maxQuadCount = 50;
 const size_t maxVertexCount = maxQuadCount * 4;
 const size_t maxIndicesCount = maxQuadCount * 6;
 const char* title = "Daddy Engine - ";
+float scale = 100.0f;
 
 //Variables for basic FPS counter
 double prevTime = 0.0;
 double crntTime = 0.0;
 double timeDiff;
 unsigned int counter = 0;
+
+static Vertex* CreateQuad(Vertex* target, float x, float y, int textureID) {
+	//Do not initialize as one like this, float size = 1.0f;
+
+	target->position = { x, y, 0.0f };
+	target->texUV = { 0.0f, 0.0f };
+	target->texNum = textureID;
+	target++;
+
+	target->position = { x + scale, y, 0.0f };
+	target->texUV = { 1.0f, 0.0f };
+	target->texNum = textureID;
+	target++;
+	
+	target->position = { x + scale, y + scale, 0.0f };
+	target->texUV = { 1.0f, 1.0f };
+	target->texNum = textureID;
+	target++;
+
+	target->position = { x, y + scale, 0.0f };
+	target->texUV = { 0.0f, 1.0f };
+	target->texNum = textureID;
+	target++;
+
+	return target;
+}
+static GLFWwindow* onInit() {
+	//initialize OpenGL
+	glfwInit();
+
+	//Create window object
+	GLFWwindow* window = glfwCreateWindow(screenWidth, screenHeight, title, NULL, NULL);
+	if (window == NULL) {
+		std::cout << "Failed to create GLFW Window" << std::endl;
+		glfwTerminate();
+	}
+
+	//Introduce the Window
+	glfwMakeContextCurrent(window);
+
+	//Load OpenGL
+	//Specify viewport of OpenGL in Window
+	//same parameters as the window object
+	gladLoadGL();
+	std::cout << glGetString(GL_VERSION) << std::endl;
+	glViewport(0, 0, screenWidth, screenHeight);
+
+	//Load Dear ImGui
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	ImGui::StyleColorsDark();
+	ImGui_ImplGlfw_InitForOpenGL(window, true);
+	ImGui_ImplOpenGL3_Init("#version 330");
+
+	return window;
+}
+static void fpsCounter(GLFWwindow* window) {
+	//FPS Counter
+	crntTime = glfwGetTime();
+	timeDiff = crntTime - prevTime;
+	counter++;
+	std::string FPS;
+	std::string ms;
+
+	//Update FPS in window
+	if (timeDiff >= 1.0 / 30.0) {
+		FPS = std::to_string((1.0 / timeDiff) * counter);
+		ms = std::to_string((timeDiff / counter) * 1000);
+		std::string newTitle = title + FPS + " FPS / " + ms + " ms";
+		glfwSetWindowTitle(window, newTitle.c_str());
+		prevTime = crntTime;
+		counter = 0;
+	}
+}
 
 //Original Vertices Array
 /*float vertices[] = {
@@ -79,7 +115,6 @@ unsigned int counter = 0;
 	600.0f, 300.0f, 0.0f,  0.0f, 0.0f, 1.0f,  1.0f, 1.0f,     2.0f,
 	600.0f, 500.0f, 0.0f,  1.0f, 1.0f, 1.0f,  1.0f, 0.0f,     2.0f
 };*/
-
 //Original Indices Array
 /*GLuint indices[] = {
 	0, 1, 2, 0, 3, 2,
@@ -88,43 +123,18 @@ unsigned int counter = 0;
 };*/
 
 int main() {
-	//initialize OpenGL
-	glfwInit();
-
-	//Create window object
-	GLFWwindow* window = glfwCreateWindow(screenWidth, screenHeight, title, NULL, NULL);
-	if (window == NULL) {
-		std::cout << "Failed to create GLFW Window" << std::endl;
-		glfwTerminate();
-		return -1;
-	}
-
-	//Introduce the Window
-	glfwMakeContextCurrent(window);
-
-	//Load OpenGL
-	//Specify viewport of OpenGL in Window
-	//same parameters as the window object
-	gladLoadGL();
-	std::cout << glGetString(GL_VERSION) << std::endl;
-	glViewport(0, 0, screenWidth, screenHeight);
-	
-	IMGUI_CHECKVERSION();
-	ImGui::CreateContext();
-	ImGuiIO& io = ImGui::GetIO(); (void)io;
-	ImGui::StyleColorsDark();
-	ImGui_ImplGlfw_InitForOpenGL(window, true);
-	ImGui_ImplOpenGL3_Init("#version 330");
+	GLFWwindow* window = onInit();
 
 	bool drawObj = true;
 	bool showDemo = false;
 	float quadPosition[2] = { 200.0f, 300.0f };
+	int quadCount = 0;
 
 	//Shader
 	Shader shaderProgram("default.vert", "default.frag");
 
 	//Indices handler for larger batches
-	GLuint indices[maxIndicesCount];
+	GLuint indices[maxIndicesCount]{};
 	GLuint offset = 0;
 	for (GLuint i = 0; i < maxIndicesCount; i += 6) {
 		indices[i + 0] = 0 + offset;
@@ -143,9 +153,8 @@ int main() {
 	EBO EBO1(indices, sizeof(indices));
 
 	VAO1.LinkAttrib(VBO1, 0, 3, GL_FLOAT, sizeof(Vertex), (void*)offsetof(Vertex, position));
-	VAO1.LinkAttrib(VBO1, 1, 3, GL_FLOAT, sizeof(Vertex), (void*)offsetof(Vertex, color));
-	VAO1.LinkAttrib(VBO1, 2, 2, GL_FLOAT, sizeof(Vertex), (void*)offsetof(Vertex, texUV));
-	VAO1.LinkAttrib(VBO1, 3, 1, GL_FLOAT, sizeof(Vertex), (void*)offsetof(Vertex, texNum));
+	VAO1.LinkAttrib(VBO1, 1, 2, GL_FLOAT, sizeof(Vertex), (void*)offsetof(Vertex, texUV));
+	VAO1.LinkAttrib(VBO1, 2, 1, GL_FLOAT, sizeof(Vertex), (void*)offsetof(Vertex, texNum));
 
 	// Unbind all to prevent accidentally modifying them
 	VAO1.Unbind();
@@ -156,6 +165,7 @@ int main() {
 	Texture ground("resources/planks.png", "ground", 0, GL_RGBA, GL_UNSIGNED_BYTE);
 	Texture wall("resources/brick.png", "wall", 1, GL_RGBA, GL_UNSIGNED_BYTE);
 	Texture penguin("resources/penguin.png", "penguin", 2, GL_RGBA, GL_UNSIGNED_BYTE);
+	wall.collision = true;
 
 	//Create Camera Object
 	Camera camera(screenWidth, screenHeight, glm::vec3(0.0f, 0.0f, 1.0f));
@@ -167,43 +177,37 @@ int main() {
 
 	//---------Driver--------//
 	while (!glfwWindowShouldClose(window)) {
-		//FPS Counter
-		crntTime = glfwGetTime();
-		timeDiff = crntTime - prevTime;
-		counter++;
-		std::string FPS;
-		std::string ms;
-
-		//Update FPS in window
-		if (timeDiff >= 1.0 / 30.0) {
-			FPS = std::to_string((1.0 / timeDiff) * counter);
-			ms = std::to_string((timeDiff / counter) * 1000);
-			std::string newTitle = title + FPS + " FPS / " + ms + " ms";
-			glfwSetWindowTitle(window, newTitle.c_str());
-			prevTime = crntTime;
-			counter = 0;
-		}
+		fpsCounter(window);
 
 		//Set Background Color
 		glClearColor(0.07f, 0.13f, 0.17f, 1.0f);
 		//Clears Color Buffer for next Frame
 
-		std::array<Vertex, 50> vertices;
+		int tileMap[7][7] = {
+			{0, 1, 1, 1, 1, 1, 1},
+			{1, 0, 1, 1, 1, 1, 1},
+			{1, 1, 0, 1, 1, 1, 1},
+			{1, 1, 1, 0, 1, 1, 1},
+			{1, 1, 1, 1, 0, 1, 1},
+			{1, 1, 1, 1, 1, 0, 1},
+			{1, 1, 1, 1, 1, 1, 0},
+		};
+
+		uint32_t indexCount = 0;
+		std::array<Vertex, 200> vertices{};
 		Vertex* buffer = vertices.data();
-		for (int y = 0; y < 1000; y+= 200) {
-			for (int x = 0; x < 1000; x+= 200) {
-				buffer = CreateQuad(buffer, x, y, (x + y) % 2);
+		int len = 7;
+		for (int y = 0; y < len; y++) {
+			for (int x = 0; x < len; x++) {
+				buffer = CreateQuad(buffer, x * scale, y * scale, tileMap[y][x]);
+				indexCount += 6;
+				quadCount++;
 			}
 		}
 
 		//Controlled Quad
-		/*auto q0 = CreateQuad(quadPosition[0], quadPosition[1], 0.0f);
-		auto q1 = CreateQuad(400.0f, 300.0f, 1.0f);
-
-		Vertex vertices[8];
-		memcpy(vertices, q0.data(), q0.size() * sizeof(Vertex));
-		memcpy(vertices + q0.size(), q1.data(), q1.size() * sizeof(Vertex));
-		*/
+		buffer = CreateQuad(buffer, screenWidth / 2 + camera.Position.x - scale, screenHeight / 2 + camera.Position.y - scale, 2);
+		indexCount += 6; 
 
 		//Set Dynamic Vertex Buffer
 		glBindBuffer(GL_ARRAY_BUFFER, VBO1.ID);
@@ -235,7 +239,11 @@ int main() {
 		//Different Sub-Objects
 		ImGui::Begin("2D Engine Debug Menu");
 		ImGui::DragFloat2("Quad Position", quadPosition, 0.1f);
+		ImGui::DragFloat("Quad Scale", &scale, 10.0f, 0.0f, 200.0f);
 		ImGui::Checkbox("Demo Window", &showDemo);
+		ImGui::Text("Quad Count: %d", quadCount);
+		ImGui::Text("Vertex Count: %d", quadCount * 4);
+		ImGui::Text("Index Count: %d", quadCount * 6);
 		ImGui::End();
 
 		//Initiate Camera object
@@ -246,12 +254,12 @@ int main() {
 		glUniform3f(glGetUniformLocation(shaderProgram.ID, "camPos"), camera.Position.x, camera.Position.y, camera.Position.z);
 		camera.Matrix(shaderProgram, "camMatrix");
 
-		glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, 0);
+		glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, nullptr);
 
 		//Render ImGui Window
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
+		quadCount = 0;
 		//Swap back buffer w/ front buffer
 		glfwSwapBuffers(window);
 		//GLFW to take care of events
